@@ -9,6 +9,7 @@
 /api/.env
 /frontend/.env
 
+
 # Archives
 *.zip
 *.rar

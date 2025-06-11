@@ -71,16 +71,22 @@ const verifyToken = (req, res, next) => {
 // --- Role-Based Access Control (RBAC) Middleware ---
 const checkRole = (roles) => {
     return (req, res, next) => {
-        // req.user should be populated by verifyToken middleware
+                console.log('--- Role Check ---');
+        console.log('User object from token:', req.user);
+        console.log('Required roles for endpoint:', roles);
+
         if (!req.user || !req.user.role) {
             return res.status(403).send({ message: 'Forbidden: Role information is missing.' });
         }
 
-        const userRole = req.user.role;
-        if (roles.includes(userRole)) {
+        const userRole = req.user.role.trim().toLowerCase();
+        const requiredRoles = roles.map(role => role.trim().toLowerCase());
+
+        if (requiredRoles.includes(userRole)) {
             next(); // User has the required role, proceed
         } else {
-            res.status(403).send({ message: `Forbidden: Your role (${userRole}) is not authorized to access this resource.` });
+                        console.log(`Authorization failed. User role '${userRole}' is not in required roles '${requiredRoles}'.`);
+            res.status(403).send({ message: `Forbidden: Your role (${req.user.role}) is not authorized to access this resource.` });
         }
     };
 };
@@ -191,6 +197,18 @@ app.get('/api/users/:id', [verifyToken, checkRole(['Administrador'])], async (re
     }
 });
 
+// GET /api/roles - Get all roles
+app.get('/api/roles', [verifyToken, checkRole(['Administrador'])], async (req, res) => {
+    try {
+        const pool = await sql.connect(dbConfig);
+        const result = await pool.request().query('SELECT id_Rol, Rol FROM Rol');
+        res.json(result.recordset);
+    } catch (err) {
+        console.error('SQL error on GET /api/roles:', err);
+        res.status(500).send({ message: 'Failed to retrieve roles.', error: err.message });
+    }
+});
+
 // PUT /api/users/:id - Update a user
 app.put('/api/users/:id', [verifyToken, checkRole(['Administrador'])], async (req, res) => {
     try {
@@ -236,19 +254,6 @@ app.get('/', (req, res) => {
   res.send('Vaccination System API is running!');
 });
 
-// --- User Endpoints ---
-
-// GET all users (Admin only)
-app.get('/api/users', [verifyToken, checkRole(['Administrador'])], async (req, res) => {
-    try {
-        const pool = await sql.connect(dbConfig);
-        const result = await pool.request().execute('usp_GetUsers');
-        res.json(result.recordset);
-    } catch (err) {
-        console.error('SQL error on GET /api/users:', err);
-        res.status(500).send({ message: 'Failed to retrieve users.', error: err.message });
-    }
-});
 
 // --- Tutor Endpoints ---
 // POST /api/tutors - Register a new Tutor and associated User with a hashed password
