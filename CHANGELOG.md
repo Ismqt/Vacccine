@@ -1,43 +1,34 @@
-# Changelog: Vaccination System
+# Changelog
 
-This document summarizes all major features, fixes, and improvements implemented over the last three days of development.
+All notable changes to this project will be documented in this file.
 
----
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## ✨ Features & Enhancements
+## [1.0.0] - 2025-06-14
 
-### 1. Full-Stack User Authentication & Authorization
-- **Backend Login Endpoint:** Created a secure `/api/auth/login` endpoint to handle user authentication.
-- **Password Security:** Implemented `bcrypt` for hashing and comparing passwords securely.
-- **JWT Implementation:** The login endpoint now generates a JSON Web Token (JWT) upon successful login, which is used to authorize subsequent API requests.
-- **Frontend Login Page:** Built a polished, responsive Login page using React and Material-UI, complete with form validation and error handling.
-- **Global Auth State:** Developed a React `AuthContext` to manage the user's authentication state, token, and role across the entire application.
-- **Persistent Sessions:** The user's session (token and user data) is now stored in `localStorage` to keep them logged in after a page refresh.
-- **Role-Based Access Control (RBAC):**
-  - Implemented middleware on the backend to protect routes based on user roles (e.g., 'Administrador').
-  - The frontend navigation bar now dynamically displays links (like "Usuarios") only to authorized users.
+This release marks the initial stable version of the Vaccination System, featuring a complete authentication flow, a functional appointment dashboard, and a project structure prepared for team collaboration.
 
-### 2. Live Data Dashboard
-- **Backend Statistics:** Created a new `usp_GetDashboardStats` stored procedure and a corresponding `/api/dashboard/stats` endpoint to fetch real-time system statistics (total users, vaccines, etc.).
-- **Frontend Dashboard:** Developed a visually appealing Dashboard page that fetches and displays these live statistics in Material-UI cards, complete with loading and error states.
+### ✨ Added
 
-### 3. User Management Module (Admin-Only)
-- **Backend User List:** Corrected and deployed the `usp_GetUsers` stored procedure and created a protected `/api/users` endpoint to provide a list of all system users.
-- **Frontend User Page:** Built a new "User Management" page that displays all users in a clean, sortable Material-UI table.
-- **Administrator Account:** Successfully created a new administrator account (`admin@vaccinationsystem.com`) to allow for system testing and management.
+-   **Full-Stack User Authentication**: Secure login system using JWT and bcrypt.
+-   **Role-Based Access Control (RBAC)**: Backend middleware and dynamic frontend UI based on user roles.
+-   **Appointment Dashboard**: A central dashboard for users to view their upcoming and past vaccination appointments.
+-   **Vaccination Centers Endpoint**: New `/api/vaccination-centers` endpoint to fetch a list of all centers.
+-   **Project Documentation**: 
+    -   A comprehensive `README.md` with setup instructions and a "Protected Code" guide for new developers.
+    -   Example environment files (`.env.example`) for both frontend and backend to streamline setup.
+-   **Git Repository**: Initialized a Git repository and pushed the project to GitHub for version control and collaboration.
 
----
+### 🐛 Fixed
 
-## 🐞 Bug Fixes & Troubleshooting
+-   **Appointment Data Logic**: Overhauled the `usp_GetAllAppointments` stored procedure to correctly fetch appointments based on user roles (admins, medics, and tutors), fixing complex table join and column name issues.
+-   **Frontend Date Handling**: Resolved a critical "Invalid time value" crash on the dashboard by implementing a helper function to correctly combine and format date and time values from the API.
+-   **API Data Mismatch**: Corrected column name aliases in the API response (`Fecha`, `Hora`) to match frontend expectations, fixing a "Cannot read properties of undefined" error.
+-   **React Hydration Errors**: Suppressed non-critical React hydration warnings caused by browser extensions by adding `suppressHydrationWarning` to the main layout.
+-   **Server Port Conflicts**: Implemented robust server restart commands to gracefully stop existing processes and prevent port conflicts between the frontend and backend.
+-   **GitHub Push Failure**: Resolved an SSH "Host key verification failed" error by switching the Git remote URL to HTTPS, enabling a successful push to the remote repository.
 
-- **Server Management:** Resolved numerous issues related to the backend and frontend servers interfering with each other, ensuring both run simultaneously without conflict.
-- **API & Database Corrections:**
-  - Fixed a critical bug where the login endpoint was missing from the backend.
-  - Corrected the frontend `authService` to send a `POST` request instead of a `GET` request during login.
-  - Fixed incorrect column names in the `usp_GetUsers` stored procedure to match the database schema.
-- **Environment & Configuration:** Resolved issues with environment variables not loading correctly in scripts by providing explicit paths.
-- **CORS Errors:** Configured Cross-Origin Resource Sharing (CORS) on the backend to allow the frontend application to make API requests.
+### 🔄 Changed
 
----
-
-This intensive development effort has resulted in a secure, functional, and polished foundation for the Vaccination System application.
+-   **Database Schema**: Updated multiple stored procedures to align with the definitive database schema, ensuring data consistency.
+-   **Code Organization**: Refactored frontend components to improve date handling and reusability.
