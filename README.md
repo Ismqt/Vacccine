@@ -1,103 +1,79 @@
-# Vaccination System
+# Sistema de Gestión de Vacunación
 
-This project is a comprehensive system for registering, tracking, controlling, and evaluating the vaccination scheme for children up to 14 years old.
+Este proyecto es una aplicación web para gestionar citas de vacunación para tutores y sus hijos. Consiste en un frontend de Next.js y una API de backend con Express y SQL Server.
 
-## Project Overview
+## Estructura del Proyecto
 
-The goal is to ensure nominal and individualized registration, monitoring, control, and evaluation of the vaccination schedule for all children up to 14 years of age. This will enable timely public health decisions, logistics of supplies, and preventive campaigns.
-
-## Tech Stack
-
-*   **Backend**: Node.js 20 LTS
-*   **Frontend**: ReactJS
-*   **UI Library**: NextUI or Bootstrap (To be decided)
-*   **Database**: PostgreSQL (Chosen)
-*   **Maps (Optional)**: React Leaflet
-
-## Architecture
-
-The system will follow a 3-tier architecture:
-1.  Database Layer
-2.  Backend Layer (API)
-3.  Frontend Layer (User Interface)
-
-## Project Structure
-
-*   [README.md](cci:7://file:///c:/Users/ismae/CascadeProjects/VaccinationSystem/README.md:0:0-0:0): This file.
-*   `/database`: Will contain database schema (e.g., [schema.sql](cci:7://file:///C:/Users/ismae/CascadeProjects/VaccinationSystem/database/schema.sql:0:0-0:0)) and migration scripts.
-*   `/backend`: Will contain the Node.js backend application.
-*   `/frontend`: Will contain the ReactJS frontend application.
-
-## Core Features
-
-1.  **Child Records Management**:
-    *   Full name, ID, DOB, gender, country of birth.
-    *   Parent/guardian details (name, ID, contact, address).
-    *   Residential address (for optional georeferencing).
-    *   Assigned health center.
-2.  **Vaccination Center Management**:
-    *   Name, short name, address, phone, director, website.
-3.  **Vaccination History**:
-    *   Vaccine applied (name, manufacturer, lot, type).
-    *   Date of application, dose, age at vaccination.
-    *   Responsible health personnel, optional digital signature.
-4.  **Alerts and Follow-up Module**:
-    *   Automatic reminders for upcoming doses.
-    *   Alerts for incomplete or overdue schedules.
-    *   Electronic appointment generation.
-5.  **Reports and Statistics**:
-    *   Coverage by age group, vaccine, or geographic area.
-    *   Coverage maps with risk indicators.
-    *   Lists of children with complete/incomplete schedules.
-    *   Data export (Excel, CSV, PDF).
-6.  **Security and Auditing**:
-    *   User access logs.
-    *   Permission controls (doctor, nurse, digitizer, supervisor).
-    *   Encryption of sensitive data.
-    *   Record modification log.
-7.  **Other Functional Features**:
-    *   Compatibility with national vaccination calendars.
-    *   Automatic age/vaccine validation.
-    *   Integration with vaccine management systems (logistics).
-    *   Digital or physical vaccination card issuance.
-    *   Offline registration with subsequent synchronization.
-
-## Setup and Installation
-
-Follow these steps to set up and run the project locally.
-
-### Prerequisites
-
-*   Node.js (Version 20 LTS recommended, as per project details)
-*   npm (comes with Node.js) or yarn
-*   PostgreSQL (or your chosen SQL database client)
-*   Git
-
-### 1. Clone the Repository
-
-```bash
-git clone <repository-url>
-cd VaccinationSystem
 ```
-Replace `<repository-url>` with the actual URL of your Git repository.
+/
+├── api/         # Código del backend (Express.js)
+├── database/    # Scripts de la base de datos (SQL)
+└── frontend/    # Código del frontend (Next.js)
+```
 
-### 2. Backend Setup (API)
+## Configuración del Entorno
 
-The backend is a Node.js application located in the `/api` directory.
+Siga estos pasos para configurar y ejecutar el proyecto localmente.
 
-1.  **Navigate to the API directory:**
-    ```bash
-    cd api
-    ```
+### 1. Requisitos Previos
 
-2.  **Install dependencies:**
-    ```bash
-    npm install
-    # or
-    # yarn install
-    ```
+- Node.js (v18 o superior)
+- npm
+- Acceso a la base de datos SQL de Azure
 
-3.  **Set up environment variables:**
+### 2. Configuración del Backend
+
+1.  Navegue al directorio `api`.
+2.  Cree un archivo `.env` basado en `.env.example` y complete los detalles de conexión de su base de datos.
+3.  Instale las dependencias: `npm install`
+4.  Inicie el servidor: `node index.js` (se ejecutará en el puerto 3001)
+
+### 3. Configuración del Frontend
+
+1.  Navegue al directorio `frontend`.
+2.  Cree un archivo `.env.local` basado en `.env.local.example`.
+3.  Instale las dependencias: `npm install`
+4.  Inicie el servidor de desarrollo: `npm run dev` (se ejecutará en el puerto 3003)
+
+---
+
+## ⚠️ Zonas de Código Protegido - ¡NO MODIFICAR! ⚠️
+
+Para evitar romper la funcionalidad principal de autenticación y gestión de citas, **NO MODIFIQUE** los siguientes archivos o endpoints. Estos componentes son estables y funcionan correctamente.
+
+### Backend (Directorio `api`)
+
+-   **`api/index.js`**: 
+    -   **Endpoint de Login (`/api/auth/login`)**: La lógica de autenticación es crítica. No la altere.
+    -   **Endpoint de Citas (`/api/appointments`)**: La obtención de citas basada en roles es compleja y está funcionando. No cambie la lógica.
+    -   **Middleware `authenticateToken` / `verifyToken`**: Esencial para la seguridad de la API.
+
+### Base de Datos (Directorio `database`)
+
+-   **`database/programmability/usp_LoginUsuario.sql`**: El procedimiento de login es fundamental.
+-   **`database/programmability/usp_GetAllAppointments.sql`**: Este procedimiento es el núcleo de la visualización de citas. Cambiarlo romperá el dashboard.
+
+### Frontend (Directorio `frontend`)
+
+-   **`frontend/app/login/page.tsx`**: La página de login y su lógica de envío son estables.
+-   **`frontend/context/auth-context.tsx`**: El contexto de autenticación gestiona el estado del usuario en toda la aplicación. Los cambios aquí tendrán efectos generalizados.
+-   **`frontend/hooks/use-api.ts`**: Este hook gestiona todas las llamadas a la API autenticadas. Modificarlo afectará a todas las solicitudes de datos.
+-   **`frontend/app/dashboard/page.tsx`**: La lógica para obtener y mostrar citas ya es funcional. Concéntrese en agregar nuevas funcionalidades en lugar de alterar las existentes.
+
+---
+
+## ✅ Tarea Actual: Registro de Niños
+
+Su tarea es implementar la funcionalidad para registrar un nuevo niño (`Nino`) bajo la tutela de un usuario.
+
+### Dónde Empezar
+
+1.  **Frontend**: Comience en `frontend/app/children/new/page.tsx` (es posible que necesite crear esta ruta y página).
+2.  **Backend**: Deberá crear un nuevo endpoint en `api/index.js`, por ejemplo, `POST /api/children`, que utilice el procedimiento almacenado `usp_RegisterNino`.
+3.  **Base de Datos**: El procedimiento `usp_RegisterNino.sql` ya existe y está listo para ser utilizado. Puede encontrarlo en `database/programmability/`.
+
+Si tiene alguna pregunta, no dude en consultar antes de realizar cambios importantes.
+
     *   Create a `.env` file in the `/api` directory by copying the example file:
         ```bash
         cp .env.example .env

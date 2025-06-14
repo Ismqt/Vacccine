@@ -34,7 +34,7 @@ BEGIN
     END
 
     -- Validations
-    IF NOT EXISTS (SELECT 1 FROM dbo.Nino WHERE id_Nino = @id_Nino)
+    IF @id_Nino IS NOT NULL AND NOT EXISTS (SELECT 1 FROM dbo.Nino WHERE id_Nino = @id_Nino)
     BEGIN
         SET @OutputMessage = 'Error: Specified Nino (Child) ID does not exist.';
         RAISERROR(@OutputMessage, 16, 1);

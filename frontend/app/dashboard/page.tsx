@@ -1,217 +1,269 @@
 "use client"
 
-import { DashboardLayout } from "@/components/layout/dashboard-layout"
+import { useEffect, useMemo, useState, useCallback } from "react"
+import { useAuth } from "@/context/auth-context"
+import { useRouter } from "next/navigation"
+import useApi from "@/hooks/use-api"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { useAuthStore } from "@/lib/store"
-import { Users, Calendar, AlertTriangle, TrendingUp, Syringe, Clock, CheckCircle } from "lucide-react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Calendar, Clock, Users, AlertCircle } from "lucide-react"
+import Link from "next/link"
 
-const mockStats = {
-  totalPatients: 1247,
-  todayAppointments: 23,
-  pendingAlerts: 8,
-  completedVaccinations: 156,
-  upcomingDoses: 45,
-  incompleteSchemes: 12,
+interface Appointment {
+  id_Cita: number
+  Fecha: string
+  Hora: string
+  NombreVacuna: string
+  NombreCentro: string
+  EstadoCita: string
 }
 
-const mockAlerts = [
-  {
-    id: 1,
-    type: "warning",
-    message: "12 pacientes con esquemas de vacunación incompletos",
-    priority: "high",
-  },
-  {
-    id: 2,
-    type: "info",
-    message: "45 dosis programadas para los próximos 7 días",
-    priority: "medium",
-  },
-  {
-    id: 3,
-    type: "success",
-    message: "Meta mensual de vacunación alcanzada al 89%",
-    priority: "low",
-  },
-]
-
-const mockUpcomingAppointments = [
-  {
-    id: 1,
-    patient: "María González",
-    vaccine: "COVID-19 (2da dosis)",
-    time: "09:30",
-    center: "Centro Norte",
-  },
-  {
-    id: 2,
-    patient: "Carlos Rodríguez",
-    vaccine: "Influenza",
-    time: "10:15",
-    center: "Centro Sur",
-  },
-  {
-    id: 3,
-    patient: "Ana Martínez",
-    vaccine: "Hepatitis B (1ra dosis)",
-    time: "11:00",
-    center: "Centro Norte",
-  },
-]
-
 export default function DashboardPage() {
-  const { user } = useAuthStore()
+  const { user, token, loading: authLoading } = useAuth()
+  const router = useRouter()
+  const [allAppointments, setAllAppointments] = useState<Appointment[] | null>(null)
+  const { request: callApi, loading: appointmentsLoading } = useApi()
 
-  const breadcrumbs = [{ label: "Dashboard" }]
+  const fetchAppointments = useCallback(async () => {
+    if (!token) {
+      return
+    }
+    try {
+      const data = await callApi("/api/appointments", { method: "GET" })
+      setAllAppointments(data)
+    } catch (err) {
+      console.error("Failed to fetch appointments:", err)
+      setAllAppointments([])
+    }
+  }, [token, callApi])
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push("/login")
+    } else if (user) {
+      fetchAppointments()
+    }
+  }, [user, authLoading, router, fetchAppointments])
+
+  const combineDateTime = useCallback((dateStr: string, timeStr: string | null): Date => {
+    const datePart = dateStr.substring(0, 10)
+    const timePart = timeStr ? timeStr.substring(11, 19) : "00:00:00"
+    return new Date(`${datePart}T${timePart}`)
+  }, [])
+
+  const formatDate = useCallback((date: Date) => {
+    if (isNaN(date.getTime())) {
+      return "Fecha inválida"
+    }
+    return new Intl.DateTimeFormat("es-ES", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    }).format(date)
+  }, [])
+
+  const upcomingAppointments = useMemo(() => {
+    if (!allAppointments) return []
+    return allAppointments
+      .filter((appointment) => appointment.EstadoCita !== "Completada" && appointment.EstadoCita !== "Cancelada")
+      .sort((a, b) => combineDateTime(a.Fecha, a.Hora).getTime() - combineDateTime(b.Fecha, b.Hora).getTime())
+      .slice(0, 5)
+  }, [allAppointments, combineDateTime])
+
+  if (authLoading) {
+    return (
+      <div className="container flex h-[calc(100vh-4rem)] items-center justify-center">
+        <div className="text-center">
+          <div className="mb-4 text-4xl font-bold">Cargando...</div>
+          <p className="text-muted-foreground">Por favor espere mientras cargamos su información</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!user) {
+    return null // Router will redirect
+  }
 
   return (
-    <DashboardLayout breadcrumbs={breadcrumbs}>
-      <div className="space-y-6">
-        {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground">
-            Bienvenido, {user?.name}. Aquí tienes un resumen de la actividad del sistema.
-          </p>
-        </div>
+    <div className="container py-10">
+      <h1 className="mb-6 text-3xl font-bold">Bienvenido, {user.email}</h1>
 
-        {/* Stats Cards */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <Tabs defaultValue="overview" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="overview">Resumen</TabsTrigger>
+          <TabsTrigger value="appointments">Citas</TabsTrigger>
+          {user.role === "Tutor" && <TabsTrigger value="children">Niños</TabsTrigger>}
+        </TabsList>
+
+        <TabsContent value="overview" className="space-y-6">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">Próximas Citas</CardTitle>
+                <Calendar className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{upcomingAppointments.length}</div>
+                <p className="text-xs text-muted-foreground">
+                  {upcomingAppointments.length === 0
+                    ? "No tiene citas programadas"
+                    : `Tiene ${upcomingAppointments.length} cita(s) pendiente(s)`}
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">Estado</CardTitle>
+                <AlertCircle className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">Activo</div>
+                <p className="text-xs text-muted-foreground">Su cuenta está activa y al día</p>
+              </CardContent>
+            </Card>
+
+            {user.role === "Tutor" && (
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium">Niños Registrados</CardTitle>
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">--</div>
+                  <p className="text-xs text-muted-foreground">Niños bajo su tutela</p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Pacientes</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{mockStats.totalPatients.toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground">+12% desde el mes pasado</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Citas Hoy</CardTitle>
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{mockStats.todayAppointments}</div>
-              <p className="text-xs text-muted-foreground">3 citas pendientes</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Vacunaciones</CardTitle>
-              <Syringe className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{mockStats.completedVaccinations}</div>
-              <p className="text-xs text-muted-foreground">Esta semana</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Alertas</CardTitle>
-              <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{mockStats.pendingAlerts}</div>
-              <p className="text-xs text-muted-foreground">Requieren atención</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-          {/* Alerts Section */}
-          <Card className="col-span-4">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5" />
-                Alertas y Notificaciones
-              </CardTitle>
-              <CardDescription>Información importante que requiere tu atención</CardDescription>
+              <CardTitle>Próximas Citas</CardTitle>
+              <CardDescription>Visualice sus próximas citas de vacunación</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {mockAlerts.map((alert) => (
-                <div key={alert.id} className="flex items-start justify-between p-3 border rounded-lg">
-                  <div className="flex items-start gap-3">
-                    {alert.type === "warning" && <AlertTriangle className="h-4 w-4 text-yellow-500 mt-0.5" />}
-                    {alert.type === "info" && <Clock className="h-4 w-4 text-blue-500 mt-0.5" />}
-                    {alert.type === "success" && <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />}
-                    <div>
-                      <p className="text-sm font-medium">{alert.message}</p>
+            <CardContent>
+              {appointmentsLoading ? (
+                <div className="flex h-40 items-center justify-center">
+                  <p className="text-muted-foreground">Cargando citas...</p>
+                </div>
+              ) : upcomingAppointments.length > 0 ? (
+                <div className="space-y-4">
+                  {upcomingAppointments.map((appointment) => (
+                    <div key={appointment.id_Cita} className="flex items-center justify-between rounded-lg border p-4">
+                      <div className="space-y-1">
+                        <p className="font-medium">{appointment.NombreVacuna}</p>
+                        <div className="flex items-center text-sm text-muted-foreground">
+                          <Calendar className="mr-1 h-4 w-4" />
+                          {formatDate(combineDateTime(appointment.Fecha, appointment.Hora))}
+                        </div>
+                        <div className="flex items-center text-sm text-muted-foreground">
+                          <Clock className="mr-1 h-4 w-4" />
+                          {appointment.Hora.substring(0, 5)}
+                        </div>
+                        <p className="text-sm text-muted-foreground">{appointment.NombreCentro}</p>
+                      </div>
+                      <div>
+                        <span className="rounded-full bg-primary/10 px-2 py-1 text-xs font-medium text-primary">
+                          {appointment.EstadoCita}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                  <Badge
-                    variant={
-                      alert.priority === "high" ? "destructive" : alert.priority === "medium" ? "default" : "secondary"
-                    }
-                  >
-                    {alert.priority}
-                  </Badge>
+                  ))}
                 </div>
-              ))}
+              ) : (
+                <div className="flex h-40 flex-col items-center justify-center space-y-3">
+                  <p className="text-muted-foreground">No tiene citas programadas</p>
+                  <Button asChild>
+                    <Link href="/appointments/new">Agendar Cita</Link>
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
+        </TabsContent>
 
-          {/* Upcoming Appointments */}
-          <Card className="col-span-3">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="h-5 w-5" />
-                Próximas Citas
-              </CardTitle>
-              <CardDescription>Citas programadas para hoy</CardDescription>
+        <TabsContent value="appointments">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Todas las Citas</CardTitle>
+                <CardDescription>Gestione todas sus citas de vacunación</CardDescription>
+              </div>
+              <Button asChild>
+                <Link href="/appointments/new">Nueva Cita</Link>
+              </Button>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {mockUpcomingAppointments.map((appointment) => (
-                <div key={appointment.id} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div>
-                    <p className="text-sm font-medium">{appointment.patient}</p>
-                    <p className="text-xs text-muted-foreground">{appointment.vaccine}</p>
-                    <p className="text-xs text-muted-foreground">{appointment.center}</p>
-                  </div>
-                  <Badge variant="outline">{appointment.time}</Badge>
+            <CardContent>
+              {appointmentsLoading ? (
+                <div className="flex h-60 items-center justify-center">
+                  <p className="text-muted-foreground">Cargando citas...</p>
                 </div>
-              ))}
-              <Button variant="outline" className="w-full">
-                Ver todas las citas
-              </Button>
+              ) : allAppointments && allAppointments.length > 0 ? (
+                <div className="space-y-4">
+                  {allAppointments.map((appointment) => (
+                    <div key={appointment.id_Cita} className="flex items-center justify-between rounded-lg border p-4">
+                      <div className="space-y-1">
+                        <p className="font-medium">{appointment.NombreVacuna}</p>
+                        <div className="flex items-center text-sm text-muted-foreground">
+                          <Calendar className="mr-1 h-4 w-4" />
+                          {formatDate(combineDateTime(appointment.Fecha, appointment.Hora))}
+                        </div>
+                        <div className="flex items-center text-sm text-muted-foreground">
+                          <Clock className="mr-1 h-4 w-4" />
+                          {appointment.Hora.substring(0, 5)}
+                        </div>
+                        <p className="text-sm text-muted-foreground">{appointment.NombreCentro}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="rounded-full bg-primary/10 px-2 py-1 text-xs font-medium text-primary">
+                          {appointment.EstadoCita}
+                        </span>
+                        <Button variant="outline" size="sm" asChild>
+                          <Link href={`/appointments/${appointment.id_Cita}`}>Ver Detalles</Link>
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex h-60 flex-col items-center justify-center space-y-3">
+                  <p className="text-muted-foreground">No tiene citas registradas</p>
+                  <Button asChild>
+                    <Link href="/appointments/new">Agendar Cita</Link>
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
-        </div>
+        </TabsContent>
 
-        {/* Quick Actions */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Acciones Rápidas</CardTitle>
-            <CardDescription>Accede rápidamente a las funciones más utilizadas</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <Button className="h-20 flex-col gap-2">
-                <Users className="h-6 w-6" />
-                Registrar Paciente
-              </Button>
-              <Button variant="outline" className="h-20 flex-col gap-2">
-                <Syringe className="h-6 w-6" />
-                Nueva Vacunación
-              </Button>
-              <Button variant="outline" className="h-20 flex-col gap-2">
-                <Calendar className="h-6 w-6" />
-                Agendar Cita
-              </Button>
-              <Button variant="outline" className="h-20 flex-col gap-2">
-                <TrendingUp className="h-6 w-6" />
-                Ver Reportes
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </DashboardLayout>
+        {user.role === "Tutor" && (
+          <TabsContent value="children">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>Niños Registrados</CardTitle>
+                  <CardDescription>Gestione los niños bajo su tutela</CardDescription>
+                </div>
+                <Button asChild>
+                  <Link href="/children/new">Registrar Niño</Link>
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <div className="flex h-60 flex-col items-center justify-center space-y-3">
+                  <p className="text-muted-foreground">No tiene niños registrados</p>
+                  <Button asChild>
+                    <Link href="/children/new">Registrar Niño</Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
+      </Tabs>
+    </div>
   )
 }

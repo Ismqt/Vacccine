@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { AddUserForm } from "@/components/admin/add-user-form"
-import { useApi } from "@/hooks/use-api"
+import useApi from "@/hooks/use-api"
 
 interface User {
   id_Usuario: number
@@ -16,10 +16,10 @@ interface User {
 
 export default function UsersPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const { data: users, isLoading, error, execute: fetchUsers } = useApi<User[]>("/users")
+  const { data: users, loading: isLoading, error, request: fetchUsers } = useApi<User[]>()
 
-  useEffect(() => {
-    fetchUsers()
+    useEffect(() => {
+    fetchUsers("/api/users")
   }, [fetchUsers])
 
   return (
@@ -36,14 +36,14 @@ export default function UsersPage() {
             </DialogHeader>
             <AddUserForm onSuccess={() => {
               setIsDialogOpen(false)
-              fetchUsers()
+              fetchUsers("/api/users")
             }} />
           </DialogContent>
         </Dialog>
       </div>
 
       {isLoading && <p>Loading users...</p>}
-      {error && <p className="text-red-500">Failed to load users: {error.message}</p>}
+      {error && <p className="text-red-500">Failed to load users: {error}</p>}
 
       {users && (
         <div className="overflow-x-auto">

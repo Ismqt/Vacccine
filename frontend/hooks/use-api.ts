@@ -1,43 +1,80 @@
-import { useState, useCallback } from "react"
-import { useAuthStore } from "@/lib/store"
+import { useState, useCallback } from 'react';
+import { useAuth } from '@/context/auth-context';
 
-export function useApi<T>(url: string) {
-  const [data, setData] = useState<T | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<Error | null>(null)
-  const token = useAuthStore((state) => state.token)
+type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
 
-  const execute = useCallback(
-    async (options: RequestInit = {}) => {
-      setIsLoading(true)
-      setError(null)
+interface RequestConfig {
+  method?: HttpMethod;
+  body?: any;
+  headers?: Record<string, string>;
+}
+
+const useApi = <T = any>() => {
+  const [data, setData] = useState<T | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const { token, logout } = useAuth();
+
+  const request = useCallback(
+    async (endpoint: string, config: RequestConfig = {}) => {
+      setLoading(true);
+      setError(null);
+      setData(null);
+
+      const { method = 'GET', body, headers = {} } = config;
+
+      const finalHeaders: Record<string, string> = {
+        'Content-Type': 'application/json',
+        ...headers,
+      };
+
+      if (token) {
+        finalHeaders['Authorization'] = `Bearer ${token}`;
+      }
+      
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      if (!apiUrl) {
+          const errorMessage = "API URL is not configured. Please set NEXT_PUBLIC_API_URL in your environment variables.";
+          console.error(errorMessage);
+          setError(errorMessage);
+          setLoading(false);
+          return;
+      }
 
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${url}`, {
-          ...options,
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-            ...options.headers,
-          },
-        })
+        const response = await fetch(`${apiUrl}${endpoint}`, {
+          method,
+          headers: finalHeaders,
+          body: body ? JSON.stringify(body) : null,
+        });
 
         if (!response.ok) {
-          throw new Error(`API error: ${response.statusText}`)
+          if (response.status === 401 || response.status === 403) {
+            logout();
+          }
+          const errorData = await response.json().catch(() => ({ message: response.statusText }));
+          throw new Error(errorData.message || 'An error occurred');
         }
 
-        const result = await response.json()
-        setData(result)
-        return result
-      } catch (e) {
-        setError(e as Error)
-        throw e
+        if (response.status === 204) {
+            setData(null);
+        } else {
+            const result = await response.json();
+            setData(result);
+            return result;
+        }
+
+      } catch (err: any) {
+        setError(err.message || 'An unknown error occurred.');
+        throw err;
       } finally {
-        setIsLoading(false)
+        setLoading(false);
       }
     },
-    [url, token],
-  )
+    [token, logout]
+  );
 
-  return { data, isLoading, error, execute }
-}
+  return { data, error, loading, request };
+};
+
+export default useApi;

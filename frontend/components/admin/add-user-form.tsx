@@ -1,13 +1,13 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 import { useForm, Controller } from "react-hook-form"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useApi } from "@/hooks/use-api"
-import { useToast } from "@/hooks/use-toast"
+import useApi from "@/hooks/use-api"
+import { useToast } from "@/components/ui/use-toast"
 
 interface Role {
   id_Rol: number
@@ -20,18 +20,18 @@ interface AddUserFormProps {
 
 export function AddUserForm({ onSuccess }: AddUserFormProps) {
   const { register, handleSubmit, control, formState: { errors } } = useForm()
-  const { data: roles, execute: fetchRoles } = useApi<Role[]>("/roles")
-  const { execute: createUser, isLoading } = useApi("/users")
+  const { data: roles, request: fetchRoles } = useApi<Role[]>()
+  const { loading: isLoading, request: createUser } = useApi()
   const { toast } = useToast()
 
-  useEffect(() => {
-    fetchRoles()
+    useEffect(() => {
+    fetchRoles("/api/roles")
   }, [fetchRoles])
 
   const onSubmit = async (data: any) => {
     try {
       const payload = { ...data, id_Rol: Number(data.id_Rol) };
-      await createUser({ method: "POST", body: JSON.stringify(payload) })
+      await createUser("/api/users", { method: "POST", body: payload })
       toast({ title: "Success", description: "User created successfully." })
       onSuccess()
     } catch (error) {
