@@ -28,19 +28,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
 
   useEffect(() => {
+    // This effect runs once on mount to load the token from localStorage.
     try {
       const storedToken = localStorage.getItem('token');
       const storedUser = localStorage.getItem('user');
       if (storedToken && storedUser) {
         setToken(storedToken);
         setUser(JSON.parse(storedUser));
+      } else {
+        // If there's no token, we're not authenticated.
+        setToken(null);
+        setUser(null);
       }
     } catch (error) {
-        console.error("Failed to parse user from localStorage", error)
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+      console.error("Failed to parse user from localStorage", error);
+      // Clear any corrupted data.
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      setToken(null);
+      setUser(null);
+    } finally {
+      // This ensures that we are done loading, regardless of the outcome.
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
 
   const login = (newToken: string, newUser: User) => {
@@ -58,6 +68,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(null);
     router.push('/login');
   };
+
+
+
+  if (loading) {
+    return <div>Loading...</div>; // Or a spinner component
+  }
 
   return (
     <AuthContext.Provider value={{ isAuthenticated: !!token, token, user, login, logout, loading }}>

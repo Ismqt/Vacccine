@@ -13,10 +13,11 @@ const useApi = <T = any>() => {
   const [data, setData] = useState<T | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
-  const { token, logout } = useAuth();
+  const { token, logout, loading: authLoading } = useAuth();
 
   const request = useCallback(
     async (endpoint: string, config: RequestConfig = {}) => {
+      if (authLoading) return;
       setLoading(true);
       setError(null);
       setData(null);
@@ -57,12 +58,12 @@ const useApi = <T = any>() => {
         }
 
         if (response.status === 204) {
-            setData(null);
-        } else {
-            const result = await response.json();
-            setData(result);
-            return result;
+          setData(null);
+          return null;
         }
+        const result = await response.json();
+        setData(result);
+        return result;
 
       } catch (err: any) {
         setError(err.message || 'An unknown error occurred.');

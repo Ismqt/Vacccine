@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { AddUserForm } from "@/components/admin/add-user-form"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { AddAdminUserForm } from "@/components/admin/add-admin-user-form"
 import useApi from "@/hooks/use-api"
 
 interface User {
@@ -32,12 +32,15 @@ export default function UsersPage() {
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Add New User</DialogTitle>
+              <DialogTitle>Crear Nuevo Usuario</DialogTitle>
+              <DialogDescription>
+                Completa los detalles para agregar un nuevo usuario al sistema. Este formulario utiliza el nuevo flujo de creación segura.
+              </DialogDescription>
             </DialogHeader>
-            <AddUserForm onSuccess={() => {
-              setIsDialogOpen(false)
-              fetchUsers("/api/users")
-            }} />
+            <AddAdminUserForm onSuccess={() => {
+                setIsDialogOpen(false);
+                fetchUsers("/api/users");
+              }} />
           </DialogContent>
         </Dialog>
       </div>

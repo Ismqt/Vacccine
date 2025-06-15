@@ -10,34 +10,49 @@ import useApi from "@/hooks/use-api"
 import { useToast } from "@/components/ui/use-toast"
 
 interface Role {
-  id_Rol: number
-  Rol: string
+  id_Rol: number;
+  Rol: string;
+}
+
+interface Center {
+  id_CentroVacunacion: number;
+  Nombre: string; // Corrected to match API response
 }
 
 interface AddUserFormProps {
-  onSuccess: () => void
+  onSuccess: () => void;
 }
 
 export function AddUserForm({ onSuccess }: AddUserFormProps) {
-  const { register, handleSubmit, control, formState: { errors } } = useForm()
-  const { data: roles, request: fetchRoles } = useApi<Role[]>()
-  const { loading: isLoading, request: createUser } = useApi()
-  const { toast } = useToast()
+  const { register, handleSubmit, control, watch, formState: { errors } } = useForm();
+  const { data: roles, request: fetchRoles } = useApi<Role[]>();
+  const { data: centers, request: fetchCenters } = useApi<Center[]>();
+  const { loading: isLoading, request: createUser } = useApi();
+  const { toast } = useToast();
 
-    useEffect(() => {
-    fetchRoles("/api/roles")
-  }, [fetchRoles])
+  useEffect(() => {
+    fetchRoles("/api/roles");
+    fetchCenters("/api/vaccination-centers");
+  }, [fetchRoles, fetchCenters]);
+
+  const selectedRoleId = watch("id_Rol");
+  const selectedRole = roles?.find(role => String(role.id_Rol) === selectedRoleId);
 
   const onSubmit = async (data: any) => {
     try {
-      const payload = { ...data, id_Rol: Number(data.id_Rol) };
-      await createUser("/api/users", { method: "POST", body: payload })
-      toast({ title: "Success", description: "User created successfully." })
-      onSuccess()
+      const payload = {
+        ...data,
+        id_Rol: Number(data.id_Rol),
+        id_CentroVacunacion: data.id_CentroVacunacion ? Number(data.id_CentroVacunacion) : null,
+      };
+      await createUser("/api/users", { method: "POST", body: JSON.stringify(payload) });
+      toast({ title: "Success", description: "User created successfully." });
+      onSuccess();
     } catch (error) {
-      toast({ title: "Error", description: "Failed to create user.", variant: "destructive" })
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+      toast({ title: "Error", description: `Failed to create user: ${errorMessage}`, variant: "destructive" });
     }
-  }
+  };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -79,6 +94,32 @@ export function AddUserForm({ onSuccess }: AddUserFormProps) {
         />
         {errors.id_Rol && <p className="text-red-500">{(errors.id_Rol.message as string)}</p>}
       </div>
+
+      {selectedRole?.Rol === 'Personal del Centro de Vacunación' && (
+        <div>
+          <Label htmlFor="id_CentroVacunacion">Vaccination Center</Label>
+          <Controller
+            name="id_CentroVacunacion"
+            control={control}
+            rules={{ required: "Center is required for this role." }}
+            render={({ field }) => (
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a center" />
+                </SelectTrigger>
+                <SelectContent>
+                  {centers?.map((center) => (
+                    <SelectItem key={center.id_CentroVacunacion} value={String(center.id_CentroVacunacion)}>
+                      {center.Nombre}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          />
+          {errors.id_CentroVacunacion && <p className="text-red-500">{(errors.id_CentroVacunacion.message as string)}</p>}
+        </div>
+      )}
       <Button type="submit" disabled={isLoading}>
         {isLoading ? "Creating..." : "Create User"}
       </Button>

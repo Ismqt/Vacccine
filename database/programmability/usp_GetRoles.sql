@@ -1,0 +1,7 @@
+CREATE PROCEDURE usp_GetRoles
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT id_Rol, Rol FROM Rol;
+END
+GO

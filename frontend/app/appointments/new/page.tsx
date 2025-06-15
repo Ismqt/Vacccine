@@ -4,7 +4,7 @@ import type React from "react"
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/context/auth-context"
-import { useApi } from "@/hooks/use-api"
+import useApi from "@/hooks/use-api"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -46,21 +46,21 @@ export default function NewAppointmentPage() {
   })
   const [appointmentFor, setAppointmentFor] = useState<"self" | "child">("self")
 
-  const { callApi, isLoading: dataLoading } = useApi()
-  const { callApi: createAppointment, isLoading: formLoading } = useApi()
+  const { request: callApi, loading: dataLoading } = useApi()
+  const { request: createAppointment, loading: formLoading } = useApi()
 
   const fetchInitialData = useCallback(async () => {
     if (!token) return
     try {
       const [centersData, vaccinesData] = await Promise.all([
-        callApi("/api/vaccination-centers", "GET"),
-        callApi("/api/vaccines", "GET"),
+        callApi("/api/vaccination-centers", { method: "GET" }),
+        callApi("/api/vaccines", { method: "GET" }),
       ])
       setCenters(centersData || [])
       setVaccines(vaccinesData || [])
 
       if (user?.role === "Tutor") {
-        const childrenData = await callApi(`/api/tutors/${user.id}/children`, "GET")
+        const childrenData = await callApi(`/api/tutors/${user.id}/children`, { method: "GET" })
         setChildren(childrenData || [])
       }
     } catch (error) {
@@ -105,7 +105,7 @@ export default function NewAppointmentPage() {
     }
 
     try {
-      await createAppointment("/api/appointments", "POST", appointmentData)
+      await createAppointment("/api/appointments", { method: "POST", body: appointmentData })
       toast({ title: "Cita agendada", description: "Su cita ha sido agendada correctamente" })
       router.push("/dashboard")
     } catch (error) {

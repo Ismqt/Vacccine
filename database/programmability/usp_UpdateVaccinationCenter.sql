@@ -1,11 +1,18 @@
-CREATE OR ALTER PROCEDURE usp_UpdateVaccinationCenter
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER PROCEDURE [dbo].[usp_UpdateVaccinationCenter]
     @id_CentroVacunacion INT,
     @NombreCentro NVARCHAR(100),
-    @NombreCorto NVARCHAR(50),
     @Direccion NVARCHAR(200),
+    @id_Provincia INT,
+    @id_Municipio INT,
     @Telefono NVARCHAR(20),
     @Director NVARCHAR(100),
-    @Web NVARCHAR(100)
+    @Web NVARCHAR(100),
+    @Capacidad INT,
+    @id_Estado INT
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -13,11 +20,14 @@ BEGIN
     UPDATE CentroVacunacion
     SET
         NombreCentro = @NombreCentro,
-        NombreCorto = @NombreCorto,
         Direccion = @Direccion,
+        id_Provincia = @id_Provincia,
+        id_Municipio = @id_Municipio,
         Telefono = @Telefono,
         Director = @Director,
-        Web = @Web
+        Web = @Web,
+        Capacidad = @Capacidad,
+        id_Estado = @id_Estado
     WHERE
         id_CentroVacunacion = @id_CentroVacunacion;
 

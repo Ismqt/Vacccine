@@ -49,121 +49,131 @@ export default function Header() {
             <span className="hidden font-bold sm:inline-block">Sistema de Vacunación</span>
           </Link>
           <nav className="hidden gap-6 md:flex">
-            {isMounted && user ? (
+            {isMounted && (
               <>
-                <Link
-                  href="/dashboard"
-                  className={`text-sm font-medium transition-colors hover:text-primary ${
-                    pathname === "/dashboard" ? "text-primary" : "text-muted-foreground"
-                  }`}
-                >
-                  Dashboard
-                </Link>
-                <Link
-                  href="/appointments"
-                  className={`text-sm font-medium transition-colors hover:text-primary ${
-                    pathname === "/appointments" ? "text-primary" : "text-muted-foreground"
-                  }`}
-                >
-                  Citas
-                </Link>
-                {user.role === "Tutor" && (
-                  <Link
-                    href="/children"
-                    className={`text-sm font-medium transition-colors hover:text-primary ${
-                      pathname === "/children" ? "text-primary" : "text-muted-foreground"
-                    }`}
-                  >
-                    Niños
-                  </Link>
+                {user ? (
+                  <>
+                    <Link
+                      href="/dashboard"
+                      className={`text-sm font-medium transition-colors hover:text-primary ${
+                        pathname === "/dashboard" ? "text-primary" : "text-muted-foreground"
+                      }`}
+                    >
+                      Dashboard
+                    </Link>
+                    <Link
+                      href="/appointments"
+                      className={`text-sm font-medium transition-colors hover:text-primary ${
+                        pathname === "/appointments" ? "text-primary" : "text-muted-foreground"
+                      }`}
+                    >
+                      Citas
+                    </Link>
+                    {user.role === "Tutor" && (
+                      <Link
+                        href="/children"
+                        className={`text-sm font-medium transition-colors hover:text-primary ${
+                          pathname === "/children" ? "text-primary" : "text-muted-foreground"
+                        }`}
+                      >
+                        Niños
+                      </Link>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      href="/about"
+                      className={`text-sm font-medium transition-colors hover:text-primary ${
+                        pathname === "/about" ? "text-primary" : "text-muted-foreground"
+                      }`}
+                    >
+                      Acerca de
+                    </Link>
+                    <Link
+                      href="/contact"
+                      className={`text-sm font-medium transition-colors hover:text-primary ${
+                        pathname === "/contact" ? "text-primary" : "text-muted-foreground"
+                      }`}
+                    >
+                      Contacto
+                    </Link>
+                  </>
                 )}
               </>
-            ) : isMounted && !user ? (
-              <>
-                <Link
-                  href="/about"
-                  className={`text-sm font-medium transition-colors hover:text-primary ${
-                    pathname === "/about" ? "text-primary" : "text-muted-foreground"
-                  }`}
-                >
-                  Acerca de
-                </Link>
-                <Link
-                  href="/contact"
-                  className={`text-sm font-medium transition-colors hover:text-primary ${
-                    pathname === "/contact" ? "text-primary" : "text-muted-foreground"
-                  }`}
-                >
-                  Contacto
-                </Link>
-              </>
-            ) : null}
+            )}
           </nav>
         </div>
         <div className="flex items-center gap-2">
-          <ModeToggle />
-          {isMounted && user ? (
+          {isMounted ? (
             <>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon">
-                    <Bell className="h-5 w-5" />
+              <ModeToggle />
+              {user ? (
+                <>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon">
+                        <Bell className="h-5 w-5" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-80">
+                      <div className="flex items-center justify-between p-2">
+                        <p className="text-sm font-medium">Notificaciones</p>
+                        <Button variant="ghost" size="sm" className="text-xs">
+                          Marcar todas como leídas
+                        </Button>
+                      </div>
+                      <DropdownMenuSeparator />
+                      <div className="max-h-80 overflow-y-auto">
+                        <div className="p-4 text-center text-sm text-muted-foreground">No hay notificaciones nuevas</div>
+                      </div>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="rounded-full">
+                        <UserCircle className="h-6 w-6" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <div className="flex items-center justify-start gap-2 p-2">
+                        <div className="flex flex-col space-y-1 leading-none">
+                          <p className="font-medium">{user.email}</p>
+                          <p className="text-xs text-muted-foreground">{user.role}</p>
+                        </div>
+                      </div>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link href="/profile">Perfil</Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/settings">Configuración</Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={logout} className="text-red-500">
+                        <LogOut className="mr-2 h-4 w-4" />
+                        <span>Cerrar Sesión</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Button asChild variant="ghost">
+                    <Link href="/login">Iniciar Sesión</Link>
                   </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-80">
-                  <div className="flex items-center justify-between p-2">
-                    <p className="text-sm font-medium">Notificaciones</p>
-                    <Button variant="ghost" size="sm" className="text-xs">
-                      Marcar todas como leídas
-                    </Button>
-                  </div>
-                  <DropdownMenuSeparator />
-                  <div className="max-h-80 overflow-y-auto">
-                    <div className="p-4 text-center text-sm text-muted-foreground">No hay notificaciones nuevas</div>
-                  </div>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="rounded-full">
-                    <UserCircle className="h-6 w-6" />
+                  <Button asChild>
+                    <Link href="/register">Registrarse</Link>
                   </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <div className="flex items-center justify-start gap-2 p-2">
-                    <div className="flex flex-col space-y-1 leading-none">
-                      <p className="font-medium">{user.email}</p>
-                      <p className="text-xs text-muted-foreground">{user.role}</p>
-                    </div>
-                  </div>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link href="/profile">Perfil</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/settings">Configuración</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={logout} className="text-red-500">
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Cerrar Sesión</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                </div>
+              )}
             </>
-          ) : isMounted && !user ? (
-            <div className="flex items-center gap-2">
-              <Button asChild variant="ghost">
-                <Link href="/login">Iniciar Sesión</Link>
-              </Button>
-              <Button asChild>
-                <Link href="/register">Registrarse</Link>
-              </Button>
-            </div>
           ) : null}
-          <Button variant="ghost" size="icon" className="md:hidden" aria-label="Toggle Menu">
-            <Menu className="h-5 w-5" />
-          </Button>
+          {isMounted && (
+            <Button variant="ghost" size="icon" className="md:hidden" aria-label="Toggle Menu">
+              <Menu className="h-5 w-5" />
+            </Button>
+          )}
         </div>
       </div>
     </header>

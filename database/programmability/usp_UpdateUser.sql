@@ -3,7 +3,8 @@ CREATE OR ALTER PROCEDURE usp_UpdateUser
     @id_Rol INT,
     @id_Estado INT,
     @Cedula_Usuario NVARCHAR(15),
-    @Email NVARCHAR(100)
+    @Email NVARCHAR(100),
+    @id_CentroVacunacion INT = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -19,7 +20,8 @@ BEGIN
         id_Rol = @id_Rol,
         id_Estado = @id_Estado,
         Cedula_Usuario = @Cedula_Usuario,
-        Email = @Email
+        Email = @Email,
+        id_CentroVacunacion = @id_CentroVacunacion
     WHERE
         id_Usuario = @id_Usuario;
 

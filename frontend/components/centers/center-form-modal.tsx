@@ -99,7 +99,8 @@ export const CenterFormModal = ({ open, onOpenChange, center, onFormSubmit }: Ce
       try {
         const provincesData = await fetchData('/api/locations/provinces');
         setProvinces(provincesData || []);
-        const statusesData = await fetchData('/api/centers/statuses');
+
+        const statusesData = await fetchData('/api/vaccination-centers/statuses');
         setStatuses(statusesData || []);
       } catch (error) {
         toast({ variant: 'destructive', title: 'Error al cargar datos iniciales' });
@@ -152,7 +153,7 @@ export const CenterFormModal = ({ open, onOpenChange, center, onFormSubmit }: Ce
   };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    const endpoint = isEditing ? `/api/centers/${center.id_CentroVacunacion}` : '/api/centers';
+    const endpoint = isEditing ? `/api/vaccination-centers/${center.id_CentroVacunacion}` : '/api/vaccination-centers';
     const method = isEditing ? 'PUT' : 'POST';
 
     try {

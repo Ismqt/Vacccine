@@ -1,17 +1,22 @@
-CREATE OR ALTER PROCEDURE [dbo].[usp_CreateUser]
+-- =============================================
+-- Author:      Cascade
+-- Create date: 2025-06-14
+-- Description: Robustly creates a new user from the admin panel.
+-- =============================================
+CREATE PROCEDURE [dbo].[usp_CreateAdminUser]
     @id_Rol INT,
     @Cedula_Usuario NVARCHAR(15),
     @Email NVARCHAR(100),
-    @Clave NVARCHAR(255),
+    @Clave NVARCHAR(255), -- Pre-hashed password
     @id_CentroVacunacion INT = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
     
-    -- 1. Validate input parameters are not null
-    IF @id_Rol IS NULL OR @Cedula_Usuario IS NULL OR @Email IS NULL OR @Clave IS NULL
+    -- 1. Validate input parameters are not null or empty
+    IF @id_Rol IS NULL OR ISNULL(@Cedula_Usuario, '') = '' OR ISNULL(@Email, '') = '' OR ISNULL(@Clave, '') = ''
     BEGIN
-        RAISERROR('Input parameters (Role, Cedula, Email, Password) cannot be null.', 16, 1);
+        RAISERROR('Input parameters (Role, Cedula, Email, Password) cannot be null or empty.', 16, 1);
         RETURN;
     END
 

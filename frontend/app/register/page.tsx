@@ -39,7 +39,7 @@ export default function RegisterPage() {
     setLoading(true)
 
     try {
-      const response = await fetch("http://localhost:3000/api/tutors", {
+            const response = await fetch("http://localhost:3001/api/tutors", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

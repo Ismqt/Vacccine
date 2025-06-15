@@ -1,25 +1,33 @@
-IF OBJECT_ID('usp_GetAllVaccinationCenters', 'P') IS NOT NULL
-    DROP PROCEDURE usp_GetAllVaccinationCenters;
+/****** Object:  StoredProcedure [dbo].[usp_GetAllVaccinationCenters]    Script Date: 14/6/2025 7:33:54 p. m. ******/
+SET ANSI_NULLS ON
 GO
-
-CREATE PROCEDURE usp_GetAllVaccinationCenters
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE OR ALTER PROCEDURE [dbo].[usp_GetAllVaccinationCenters]
 AS
 BEGIN
     SET NOCOUNT ON;
 
     SELECT 
-        id_CentroVacunacion,
-        NombreCentro,
-        NombreCorto,
-        Direccion,
-        Telefono,
-        Director,
-        Web
+        cv.id_CentroVacunacion,
+        cv.NombreCentro,
+        cv.NombreCorto,
+        cv.Direccion,
+        p.Nombre AS Provincia,
+        m.Nombre AS Municipio,
+        cv.Telefono,
+        cv.Director,
+        cv.Web,
+        cv.Capacidad,
+        e.NombreEstado
     FROM 
-        CentroVacunacion;
+        dbo.CentroVacunacion cv
+    LEFT JOIN 
+        dbo.Provincia p ON cv.id_Provincia = p.id_Provincia
+    LEFT JOIN 
+        dbo.Municipio m ON cv.id_Municipio = m.id_Municipio
+    LEFT JOIN 
+        dbo.EstadosCentro e ON cv.id_Estado = e.id_Estado;
 
 END;
-GO
-
-PRINT 'Stored procedure usp_GetAllVaccinationCenters created/updated.';
 GO
