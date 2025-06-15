@@ -95,7 +95,7 @@ export function AddUserForm({ onSuccess }: AddUserFormProps) {
         {errors.id_Rol && <p className="text-red-500">{(errors.id_Rol.message as string)}</p>}
       </div>
 
-      {selectedRole?.Rol === 'Personal del Centro de Vacunación' && (
+      {selectedRole?.id_Rol === 6 && (
         <div>
           <Label htmlFor="id_CentroVacunacion">Vaccination Center</Label>
           <Controller

@@ -68,7 +68,7 @@ export default function RegisterChildPage() {
         id_Tutor: Number.parseInt(formData.id_Tutor),
       }
 
-      const response = await fetch("http://localhost:3000/api/ninos", {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/ninos`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

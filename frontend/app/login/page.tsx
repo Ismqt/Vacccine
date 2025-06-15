@@ -18,15 +18,7 @@ export default function LoginPage() {
   const { login, user, loading } = useAuth()
   const router = useRouter()
 
-  useEffect(() => {
-    if (user) {
-      if (user.role === "Administrador") {
-        setIsAdmin(true)
-      } else {
-        router.push("/dashboard")
-      }
-    }
-  }, [user, router])
+
 
     const [error, setError] = useState("");
 
@@ -50,6 +42,7 @@ export default function LoginPage() {
         throw new Error(data.message || 'Failed to login');
       }
 
+      console.log('[LoginPage] User data from API to be passed to AuthContext:', JSON.stringify(data.user, null, 2));
       login(data.token, data.user);
 
     } catch (err: any) {
@@ -85,6 +78,7 @@ export default function LoginPage() {
             <CardDescription>
               Ingresa tu correo electrónico o tu número de identificación para acceder a tu cuenta.
             </CardDescription>
+            {error && <p className="text-sm font-medium text-destructive pt-2">{error}</p>}
           </CardHeader>
           <CardContent className="grid gap-4">
             <div className="grid gap-2">

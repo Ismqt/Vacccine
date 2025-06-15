@@ -20,9 +20,10 @@ BEGIN
         u.id_Rol,
         r.Rol AS NombreRol,
         u.id_Estado AS id_EstadoUsuario,
-        es.Estado AS NombreEstado
+        es.Estado AS NombreEstado,
+        u.id_CentroVacunacion
     FROM 
-        Usuario u
+        dbo.Usuario u
     INNER JOIN 
         Rol r ON u.id_Rol = r.id_Rol
     INNER JOIN

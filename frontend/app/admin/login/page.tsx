@@ -21,7 +21,7 @@ export default function AdminLoginPage() {
 
   useEffect(() => {
     if (user) {
-      if (user.role === "Administrador") {
+      if (user.id_Rol === 1) {
         router.push("/admin")
       } else {
         // Log out non-admin users and show an error

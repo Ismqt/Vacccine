@@ -22,6 +22,8 @@ DROP TABLE IF EXISTS TutorNino;
 GO
 DROP TABLE IF EXISTS Nino;
 GO
+DROP TABLE IF EXISTS DisponibilidadHoraria;
+GO
 DROP TABLE IF EXISTS CentroVacunacion;
 GO
 DROP TABLE IF EXISTS Tutor;
@@ -95,6 +97,21 @@ CREATE TABLE CentroVacunacion (
     Telefono NVARCHAR(20),
     Director NVARCHAR(100),
     Web NVARCHAR(100)
+);
+GO
+
+-- Table: DisponibilidadHoraria (Availability Slots)
+CREATE TABLE DisponibilidadHoraria (
+    id_Disponibilidad INT IDENTITY(1,1) PRIMARY KEY,
+    id_CentroVacunacion INT NOT NULL,
+    Fecha DATE NOT NULL,
+    HoraInicio TIME NOT NULL,
+    HoraFin TIME NOT NULL,
+    CuposTotales INT NOT NULL CHECK (CuposTotales >= 0),
+    CuposDisponibles INT NOT NULL,
+    CONSTRAINT FK_Disponibilidad_Centro FOREIGN KEY (id_CentroVacunacion) REFERENCES CentroVacunacion(id_CentroVacunacion) ON DELETE CASCADE,
+    CONSTRAINT CK_Disponibilidad_Cupos CHECK (CuposDisponibles <= CuposTotales AND CuposDisponibles >= 0),
+    CONSTRAINT UQ_Disponibilidad_Centro_Fecha UNIQUE (id_CentroVacunacion, Fecha)
 );
 GO
 
